@@ -132,11 +132,11 @@ def find(start, end, tree):
 
 ap = argparse.ArgumentParser()
 ap.add_argument('bam', help='sorted bam file')
-ap.add_argument('outDir', help='dir to save results, dir will b ecreated')
+#ap.add_argument('outDir', help='dir to save results, dir will b ecreated')
 ap.add_argument('statFile', help='file to save number of reads per genome category')
 ap.add_argument('org', help='h - human, m - mouse')
-
-
+ap.add_argument("--readPerCategory", help="reports category for every read. A separate file per chr will be created",
+                    action="store_true")
 
 
 
@@ -158,12 +158,12 @@ args = ap.parse_args()
 
 
 
-##https://www.biostars.org/p/99/
 
-if not os.path.exists(args.outDir):
-    os.makedirs(args.outDir)
 
 print os.path.dirname(os.path.realpath(__file__))
+
+outDir=os.path.dirname(args.statFile)
+
 
 
 chr_list=[]
@@ -201,7 +201,7 @@ base=os.path.basename(args.bam)
 prefix=os.path.splitext(base)[0]
 
 
-
+print prefix
 
 
 
@@ -336,18 +336,19 @@ print find_list1,find_list2,find_list3,find_list4,find_list5,find_list6
 #======================================================================
 #BAM
 
+if args.readPerCategory:
+    outFile={}
+    for chr in chr_list:
+        f_file=outDir+"/"+prefix+"."+chr+".genomicFeature"
+        print f_file
+        outfile = open(f_file, 'w' )
+        outFile[chr]=open(f_file, 'w' )
 
-outFile={}
-for chr in chr_list:
-    f_file=args.outDir+"/"+prefix+"."+chr+".genomicFeature"
+
+    #MT
+    f_file=outDir+"/"+prefix+"."+'MT'+".genomicFeature"
     outfile = open(f_file, 'w' )
-    outFile[chr]=open(f_file, 'w' )
-
-
-#MT
-f_file=args.outDir+"/"+prefix+"."+'MT'+".genomicFeature"
-outfile = open(f_file, 'w' )
-outFile['MT']=open(f_file, 'w' )
+    outFile['MT']=open(f_file, 'w' )
 
 
 
@@ -399,14 +400,18 @@ for chr in chr_list:
             fusionReads.append(readName)
             
         elif is_rRNA(read,chr):
-            outFile[chr].write( readName+','+chr + ',' + 'rRNA' + '\n' )
+            if args.readPerCategory:
+                outFile[chr].write( readName+','+chr + ',' + 'rRNA' + '\n' )
             nrRNA+=1
         elif is_junction(read):
-            outFile[chr].write( readName+','+chr + ',' + 'junction' + '\n' )
+            if args.readPerCategory:
+                outFile[chr].write( readName+','+chr + ',' + 'junction' + '\n' )
             nJunction+=1
         else:
+            
             feature=whichFeature(read,chr)
-            outFile[chr].write( readName+','+chr + ',' + feature + '\n' )
+            if args.readPerCategory:
+                outFile[chr].write( readName+','+chr + ',' + feature + '\n' )
             if feature=='CDS':
                 nCDS+=1
             elif feature=='INTRON':
@@ -437,7 +442,8 @@ for read in bamfile.fetch('MT'):
     elif read.reference_id!=read.next_reference_id:  #mate mapped to different chromosome
         fusionReads.append(readName)
     else:
-        outFile[chr].write( readName+','+'MT' + ',' + 'MT' + '\n' )
+        if args.readPerCategory:
+            outFile['MT'].write( readName+','+'MT' + ',' + 'MT' + '\n' )
         nMT+=1
 
 print "multiMappedReads",len(multiMappedReads)
@@ -449,23 +455,21 @@ fusionReads=set(fusionReads)
 print "fusionReads",len(fusionReads)
 
 
-#fusionReads
-f_fusionReads=args.outDir+"/"+prefix+"."+'_fusionReads.reads'
-outfile = open(f_fusionReads, 'w' )
+if args.readPerCategory:
+    #fusionReads
+    f_fusionReads=outDir+"/"+prefix+"."+'_fusionReads.reads'
+    outfile = open(f_fusionReads, 'w' )
 
-for i in fusionReads:
-    outfile.write(i)
-    outfile.write("\n")
+    for i in fusionReads:
+        outfile.write(i)
+        outfile.write("\n")
+    #multiMappedReads
+    f_multiMappedReads=outDir+"/"+prefix+"."+'_multiMappedReads.reads'
+    outfile = open(f_multiMappedReads, 'w' )
 
-
-
-#multiMappedReads
-f_multiMappedReads=args.outDir+"/"+prefix+"."+'_multiMappedReads.reads'
-outfile = open(f_multiMappedReads, 'w' )
-
-for i in multiMappedReads:
-    outfile.write(i)
-    outfile.write("\n")
+    for i in multiMappedReads:
+        outfile.write(i)
+        outfile.write("\n")
 
 
 
