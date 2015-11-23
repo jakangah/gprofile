@@ -137,8 +137,12 @@ ap.add_argument('statFile', help='file to save number of reads per genome catego
 ap.add_argument('org', help='h - human, m - mouse')
 ap.add_argument("--readPerCategory", help="reports category for every read. A separate file per chr will be created",
                     action="store_true")
+<<<<<<< HEAD
+ap.add_argument('mapq', type=int,default=50,help='for GTEx (i.e. TopHat 1.4.1, which uses 255 as uniq mapq), -m g (default = 50))')
+=======
 ap.add_argument("--verbose", help="verbose output - outputs files with read names in each chromosome", action="store_true")
 
+>>>>>>> refs/remotes/origin/master
 
 
 
@@ -349,8 +353,23 @@ if args.verbose:
         #MT
         f_file=outDir+"/"+prefix+"."+'MT'+".genomicFeature"
         outfile = open(f_file, 'w' )
+<<<<<<< HEAD
+        outFile[chr]=open(f_file, 'w' )
+
+
+    #MT
+    f_file=outDir+"/"+prefix+"."+'MT'+".genomicFeature"
+    outfile = open(f_file, 'w' )
+    outFile['MT']=open(f_file, 'w' )
+mapq = 0
+if args.mapq==255:
+    mapq = 255
+else:
+    mapq = 50
+=======
         outFile['MT']=open(f_file, 'w' )
 
+>>>>>>> refs/remotes/origin/master
 
 
 print "Open bam file",args.bam
@@ -394,7 +413,7 @@ for chr in chr_list:
             sys.exit(1)
         
       
-        if read.mapq!=50:
+        if read.mapq!=mapq:
             multiMappedReads.append(readName)
         
         elif read.reference_id!=read.next_reference_id and not read.mate_is_unmapped:  #mate mapped to different chromosome
@@ -438,7 +457,7 @@ for read in bamfile.fetch('MT'):
     else:
         readName=read.query_name+"/2"
     
-    if read.mapq!=50:
+    if read.mapq!=mapq:
             multiMappedReads.append(readName)
     elif read.reference_id!=read.next_reference_id:  #mate mapped to different chromosome
         fusionReads.append(readName)
