@@ -137,6 +137,7 @@ ap.add_argument('statFile', help='file to save number of reads per genome catego
 ap.add_argument('org', help='h - human, m - mouse')
 ap.add_argument("--readPerCategory", help="reports category for every read. A separate file per chr will be created",
                     action="store_true")
+ap.add_argument("--verbose", help="verbose output - outputs files with read names in each chromosome", action="store_true")
 
 
 
@@ -335,20 +336,20 @@ print find_list1,find_list2,find_list3,find_list4,find_list5,find_list6
 
 #======================================================================
 #BAM
-
-if args.readPerCategory:
-    outFile={}
-    for chr in chr_list:
-        f_file=outDir+"/"+prefix+"."+chr+".genomicFeature"
-        print f_file
+if args.verbose:
+    if args.readPerCategory:
+        outFile={}
+        for chr in chr_list:
+            f_file=outDir+"/"+prefix+"."+chr+".genomicFeature"
+            print f_file
+            outfile = open(f_file, 'w' )
+            outFile[chr]=open(f_file, 'w' )
+    
+    
+        #MT
+        f_file=outDir+"/"+prefix+"."+'MT'+".genomicFeature"
         outfile = open(f_file, 'w' )
-        outFile[chr]=open(f_file, 'w' )
-
-
-    #MT
-    f_file=outDir+"/"+prefix+"."+'MT'+".genomicFeature"
-    outfile = open(f_file, 'w' )
-    outFile['MT']=open(f_file, 'w' )
+        outFile['MT']=open(f_file, 'w' )
 
 
 
@@ -400,17 +401,17 @@ for chr in chr_list:
             fusionReads.append(readName)
             
         elif is_rRNA(read,chr):
-            if args.readPerCategory:
+            if args.readPerCategory and args.verbose:
                 outFile[chr].write( readName+','+chr + ',' + 'rRNA' + '\n' )
             nrRNA+=1
         elif is_junction(read):
-            if args.readPerCategory:
+            if args.readPerCategory and args.verbose:
                 outFile[chr].write( readName+','+chr + ',' + 'junction' + '\n' )
             nJunction+=1
         else:
             
             feature=whichFeature(read,chr)
-            if args.readPerCategory:
+            if args.readPerCategory and args.verbose:
                 outFile[chr].write( readName+','+chr + ',' + feature + '\n' )
             if feature=='CDS':
                 nCDS+=1
@@ -442,7 +443,7 @@ for read in bamfile.fetch('MT'):
     elif read.reference_id!=read.next_reference_id:  #mate mapped to different chromosome
         fusionReads.append(readName)
     else:
-        if args.readPerCategory:
+        if args.readPerCategory and args.verbose:
             outFile['MT'].write( readName+','+'MT' + ',' + 'MT' + '\n' )
         nMT+=1
 
@@ -455,7 +456,7 @@ fusionReads=set(fusionReads)
 print "fusionReads",len(fusionReads)
 
 
-if args.readPerCategory:
+if args.readPerCategory and args.verbose:
     #fusionReads
     f_fusionReads=outDir+"/"+prefix+"."+'_fusionReads.reads'
     outfile = open(f_fusionReads, 'w' )
